@@ -8,14 +8,20 @@ import {
   CheckCircle2,
   Star,
   DollarSign,
+  Loader2,
 } from "lucide-react";
+
+const BREVO_API_KEY =
+  "REVOKED_API_KEY";
+const BREVO_LIST_ID = 70;
 
 const CaptureGate = () => {
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [errors, setErrors] = useState<{ name?: string; email?: string }>({});
-  const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [apiError, setApiError] = useState("");
 
   const validate = () => {
     const errs: { name?: string; email?: string } = {};
@@ -29,11 +35,41 @@ const CaptureGate = () => {
     return Object.keys(errs).length === 0;
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
-    setSubmitted(true);
-    setTimeout(() => navigate("/bridge"), 600);
+    setSubmitting(true);
+    setApiError("");
+
+    try {
+      const res = await fetch("https://api.brevo.com/v3/contacts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "api-key": BREVO_API_KEY,
+        },
+        body: JSON.stringify({
+          email: email.trim(),
+          attributes: {
+            FIRSTNAME: name.trim(),
+          },
+          listIds: [BREVO_LIST_ID],
+          updateEnabled: true,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || "Failed to subscribe");
+      }
+
+      navigate("/bridge");
+    } catch (err) {
+      setApiError(
+        err instanceof Error ? err.message : "Something went wrong. Please try again."
+      );
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -188,13 +224,13 @@ const CaptureGate = () => {
                 {/* Submit */}
                 <button
                   type="submit"
-                  disabled={submitted}
+                  disabled={submitting}
                   className="group w-full inline-flex items-center justify-center gap-2.5 bg-[#7c3aed] hover:bg-[#6d28d9] disabled:bg-[#a78bfa] text-white font-bold h-14 rounded-2xl text-base transition-all duration-200 shadow-glow hover:shadow-xl hover:-translate-y-0.5"
                 >
-                  {submitted ? (
+                  {submitting ? (
                     <>
-                      <CheckCircle2 className="w-5 h-5" />
-                      Access Granted!
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Securing Access...
                     </>
                   ) : (
                     <>
@@ -203,6 +239,12 @@ const CaptureGate = () => {
                     </>
                   )}
                 </button>
+
+                {apiError && (
+                  <p className="text-red-500 text-sm text-center mt-3">
+                    {apiError}
+                  </p>
+                )}
               </form>
 
               <p className="text-xs text-gray-400 text-center mt-5 leading-relaxed">
