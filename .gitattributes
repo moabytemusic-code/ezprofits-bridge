@@ -1,0 +1,4 @@
+* text=auto eol=lf
+*.{ts,tsx,js,jsx,json,css,html,md} text eol=lf
+*.{png,jpg,jpeg,gif,webp,svg,ico} binary
+pnpm-lock.yaml binary

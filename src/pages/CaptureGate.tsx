@@ -11,10 +11,6 @@ import {
   Loader2,
 } from "lucide-react";
 
-const BREVO_API_KEY =
-  "REVOKED_API_KEY";
-const BREVO_LIST_ID = 70;
-
 const CaptureGate = () => {
   const navigate = useNavigate();
   const [name, setName] = useState("");
@@ -42,31 +38,28 @@ const CaptureGate = () => {
     setApiError("");
 
     try {
-      const res = await fetch("https://api.brevo.com/v3/contacts", {
+      const res = await fetch("/api/subscribe", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "api-key": BREVO_API_KEY,
         },
         body: JSON.stringify({
+          name: name.trim(),
           email: email.trim(),
-          attributes: {
-            FIRSTNAME: name.trim(),
-          },
-          listIds: [BREVO_LIST_ID],
-          updateEnabled: true,
         }),
       });
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.message || "Failed to subscribe");
+        throw new Error(data.error || "Failed to subscribe");
       }
 
       navigate("/bridge");
     } catch (err) {
       setApiError(
-        err instanceof Error ? err.message : "Something went wrong. Please try again."
+        err instanceof Error
+          ? err.message
+          : "Something went wrong. Please try again."
       );
       setSubmitting(false);
     }
@@ -117,11 +110,20 @@ const CaptureGate = () => {
             {/* Mini benefits */}
             <div className="space-y-3 max-w-sm mx-auto lg:mx-0">
               {[
-                { icon: CheckCircle2, text: "100% free to join — no credit card" },
+                {
+                  icon: CheckCircle2,
+                  text: "100% free to join — no credit card",
+                },
                 { icon: CheckCircle2, text: "Free starter traffic included" },
-                { icon: CheckCircle2, text: "Up to 100% commissions on every sale" },
+                {
+                  icon: CheckCircle2,
+                  text: "Up to 100% commissions on every sale",
+                },
               ].map((item, i) => (
-                <div key={i} className="flex items-center gap-3 text-sm text-gray-600">
+                <div
+                  key={i}
+                  className="flex items-center gap-3 text-sm text-gray-600"
+                >
                   <item.icon className="w-4 h-4 text-[#10b981] flex-shrink-0" />
                   {item.text}
                 </div>
@@ -175,7 +177,8 @@ const CaptureGate = () => {
                     value={name}
                     onChange={(e) => {
                       setName(e.target.value);
-                      if (errors.name) setErrors((p) => ({ ...p, name: undefined }));
+                      if (errors.name)
+                        setErrors((p) => ({ ...p, name: undefined }));
                     }}
                     placeholder="Enter your first name"
                     className={`w-full h-12 px-4 rounded-xl border-2 bg-gray-50 text-gray-900 placeholder:text-gray-400 transition-colors outline-none ${
@@ -205,7 +208,8 @@ const CaptureGate = () => {
                     value={email}
                     onChange={(e) => {
                       setEmail(e.target.value);
-                      if (errors.email) setErrors((p) => ({ ...p, email: undefined }));
+                      if (errors.email)
+                        setErrors((p) => ({ ...p, email: undefined }));
                     }}
                     placeholder="Enter your best email"
                     className={`w-full h-12 px-4 rounded-xl border-2 bg-gray-50 text-gray-900 placeholder:text-gray-400 transition-colors outline-none ${
